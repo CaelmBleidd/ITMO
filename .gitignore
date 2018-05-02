@@ -8,9 +8,10 @@ install_manifest.txt
 compile_commands.json
 CTestTestfile.cmake
 CMakeLists.txt
-/cmake-build-debug
-/out
+/cmake-build-debug/
+/out/
 *.iml
+*.DS_Store
 
 # Prerequisites
 *.d

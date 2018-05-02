@@ -12,7 +12,7 @@ CMakeLists.txt
 */**/out/
 *.iml
 *.DS_Store
-
+*/.idea/*
 # Prerequisites
 *.d
 

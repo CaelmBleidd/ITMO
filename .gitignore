@@ -86,3 +86,25 @@ pom.xml.asc
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
+
+
+#my own files
+*/**/AbstractTests.java
+*/**/ArithmeticTests.java
+*/**/BaseJavascriptTest.java
+*/**/Engine.java
+*/**/EngineException.java
+*/**/FunctionalCubeTest.java
+*/**/FunctionalExpressionTest.java
+*/**/FunctionalPieMinMaxTest.java
+*/**/FunctionalPieTest.java
+*/**/JSEngine.java
+*/**/Language.java
+*/**/ObjectExpressionTest.java
+*/**/ObjectPowLogTest.java
+*/**/ObjectSquareTest.java
+*/**/PostfixAtanExpTest.java
+*/**/PrefixAtanExpTest.java
+*/**/PrefixParserTest.java
+*/**/VariablesTests.java
+*/**/script.js

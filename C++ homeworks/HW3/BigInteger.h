@@ -6,47 +6,68 @@
 
 #include <iostream>
 #include <vector>
+#include <cmath>
 
-class BigInteger {
+template<typename T, size_t Base = std::numeric_limits<T>::max()>
+class BigInteger;
+
+template<typename T, size_t Base>
+class BigInteger{
 public:
     explicit BigInteger(int64_t value = 0);
+    explicit BigInteger(const std::string &);
+    explicit BigInteger(const std::vector<T> &, const int64_t sign);
+    template<typename NewT, size_t NewBase>
+    explicit operator BigInteger<NewT, NewBase>();
 
     BigInteger(const BigInteger &);
-
     BigInteger(BigInteger &&) noexcept;
 
     ~BigInteger();
 
+    size_t Size() const;
+    std::string to_string(BigInteger &);
+    T operator[](size_t id) const;
+
     BigInteger &operator=(const BigInteger &);
+    bool operator<(const BigInteger&) const;
+    bool operator>(const BigInteger&) const;
+    bool operator<=(const BigInteger&) const;
+    bool operator>=(const BigInteger&) const;
+    bool operator==(const BigInteger&) const;
+    bool operator!=(const BigInteger&) const;
+    BigInteger abs() const;
 
     BigInteger &operator+=(const BigInteger &);
-
     BigInteger operator+(const BigInteger &) const;
-
     BigInteger &operator-=(const BigInteger &);
-
     BigInteger operator-(const BigInteger &) const;
+    BigInteger &operator*=(const BigInteger&);
+    BigInteger &operator*(const BigInteger&) const;
+    BigInteger &operator/=(const BigInteger&);
+    BigInteger &operator/(const BigInteger&) const;
 
-    bool operator==(const BigInteger &);
+    BigInteger operator*(int64_t) const;
+    BigInteger operator/(int64_t) const;
+    BigInteger operator%=(int64_t) const;
+    BigInteger operator%(int64_t) const;
+    BigInteger operator-() const;
+    BigInteger operator+() const;
 
 private:
-    friend std::ostream &operator<<(std::ostream &, const BigInteger &);
+    void trim();
 
-    friend std::istream &operator>>(std::istream &, BigInteger &);
+    template<typename T, size_t Base>
+    friend std::ostream &operator<<(std::ostream &, const BigInteger<T, Base> &);
+    template<typename T, size_t Base>
+    friend std::istream &operator>>(std::istream &, BigInteger<T, Base> &);
+
+    BigInteger & add(BigInteger &) const;
+    BigInteger & subtract(const BigInteger &);
 
     int64_t sign;
-    std::vector<uint64_t> bits;
-
-    int8_t compare(std::vector<uint64_t> bits);
-
-    std::vector<uint64_t> add(std::vector<uint64_t> number1, std::vector<uint64_t> number2) const;
-
-    std::vector<uint64_t> subtract(std::vector<uint64_t> number1, std::vector<uint64_t> number2) const;
-
-
+    std::vector<T> bits;
+    size_t size_of_number;
+    const size_t num_of_bits = (size_t) std::ceil(log2(Base));
+    const size_t num_of_blocks = sizeof(T) * 8 / num_of_bits;
 };
-
-std::ostream &operator<<(std::ostream &, const BigInteger &);
-
-std::istream &operator>>(std::istream &, BigInteger &);
-

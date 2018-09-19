@@ -69,14 +69,10 @@ class HttpServer {
         }
 
         String uri = URLDecoder.decode(request.getUri(), "UTF-8");
-//        if (uri.endsWith("/")) {
-//            uri = uri.substring(0, uri.length() - 1);
-//        }
 
-//            if (new File(firstLineTokens[1]).isFile()) {
-
-        if ((!(uri.endsWith(".png")) && !(uri.endsWith(".html"))) || uri.endsWith("/images"))
+        if (new File(root + uri).isDirectory()) {
             uri += "/index.html";
+        }
 
         File file = new File(root, uri);
         if (file.isFile()) {

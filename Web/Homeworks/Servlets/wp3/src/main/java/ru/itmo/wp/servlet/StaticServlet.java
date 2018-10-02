@@ -3,6 +3,7 @@ package ru.itmo.wp.servlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.sound.midi.SysexMessage;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -12,19 +13,21 @@ public class StaticServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String uri = request.getRequestURI();
+        OutputStream outputStream = response.getOutputStream();
 
-        File file = new File(getServletContext().getRealPath("/static" + uri));
-
-
+        File file = new File(System.getProperty("user.dir") + "/src/main/webapp/static" + uri);
 
         if (file.isFile()) {
-            response.setContentType(getContentTypeFromName(uri));
-            OutputStream outputStream = response.getOutputStream();
             Files.copy(file.toPath(), outputStream);
-            outputStream.flush();
         } else {
-            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            file = new File(System.getProperty("user.dir") + "/src/static" + uri);
+            if (file.isFile()) {
+                Files.copy(file.toPath(), outputStream);
+            } else {
+                response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            }
         }
+
     }
 
     private String getContentTypeFromName(String name) {

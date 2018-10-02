@@ -284,8 +284,8 @@ main .login-form-box .body .field input {
 }
 
 main .login-form-box .field .error {
-    padding-left: 20px;
-    padding-top: 0;
+    margin-left: 4%;
+    margin-top: -4%;
     text-align: center;
     color: #ff0000;
     font-size: 11px;

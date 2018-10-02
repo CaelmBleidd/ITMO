@@ -12,20 +12,29 @@ import java.nio.file.Files;
 public class StaticServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String uri = request.getRequestURI();
+//        String uri = request.getRequestURI();
+
+        String[] uries = request.getRequestURI().split("\\+");
         OutputStream outputStream = response.getOutputStream();
+        response.setContentType(getContentTypeFromName(uries[0]));
 
-        File file = new File(System.getProperty("user.dir") + "/src/main/webapp/static" + uri);
+        for (String uri: uries) {
+            if(!uri.startsWith("/"))
+                uri = "/" + uri;
 
-        if (file.isFile()) {
-            Files.copy(file.toPath(), outputStream);
-        } else {
-            file = new File(System.getProperty("user.dir") + "/src/static" + uri);
+            File file = new File(System.getProperty("user.dir") + "/src/main/webapp/static" + uri);
+
             if (file.isFile()) {
                 Files.copy(file.toPath(), outputStream);
             } else {
-                response.sendError(HttpServletResponse.SC_NOT_FOUND);
+                file = new File(System.getProperty("user.dir") + "/src/static" + uri);
+                if (file.isFile()) {
+                    Files.copy(file.toPath(), outputStream);
+                } else {
+                    response.sendError(HttpServletResponse.SC_NOT_FOUND);
+                }
             }
+            outputStream.flush();
         }
 
     }

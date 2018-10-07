@@ -229,30 +229,6 @@ aside section .footer a:after {
     content: " →";
 }
 
-main .login-form-box {
-    border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
-    border: 1px solid var(--border-color);
-    width: 35em;
-    margin: 2em auto;
-}
-
-main .login-form-box .header {
-    border-bottom: 1px solid var(--border-color);
-    padding: 0 0 0.3em 0.5em;
-    color: #3B5998;
-    font-size: 1.5rem;
-    font-weight: bold;
-    margin: 0.2em 0 2em;
-}
-
-main .login-form-box .body .name {
-    padding: 0 2em 0.5em 2.5em;
-    font-size: 1.1em;
-    position: absolute;
-    text-align: right;
-}
-
 main article .footer .left .positive-score {
     top: 2px;
     text-align: center;
@@ -262,47 +238,68 @@ main article .footer .left img {
     vertical-align: middle;
 }
 
-main .login-form-box .body .value {
+/*===================================================================================================================*/
+
+main .login-form-box {
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    border: 1px solid var(--border-color);
+    width: 31em;
+    margin: 2em auto;
+    display: flex;
+    flex-direction: column;
+}
+
+main .login-form-box .header {
+    border-bottom: 1px solid var(--border-color);
+    padding: 0.2em 0 0.2em 0.5em;
+    color: #3B5998;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+main .login-form-box .body .field {
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 0.3em;
+    flex-wrap: wrap;
+}
+
+main .login-form-box .body .field .name {
+    width: 12em;
+    justify-content: right;
     text-align: right;
-    width: 32em;
-    padding-bottom: 5px;
 }
 
-main .login-form-box .body .field label[for="handleOrEmail"] {
-    position: absolute;
-    left: 85px;
+main .login-form-box .body .field .value {
+    width: 17em;
 }
 
-main .login-form-box .body .field label[for="password"] {
-    position: absolute;
-    left: 119px;
-}
-
-main .login-form-box .body .field input {
-    width: 290px;
-    margin-bottom: 20px;
-}
-
-main .login-form-box .field .error {
-    margin-left: 4%;
-    margin-top: -4%;
-    text-align: center;
+main .login-form-box .body .field .error {
     color: #ff0000;
-    font-size: 11px;
+    font-size: 12px;
+    flex-grow: 1;
+    text-align: center;
+    padding-left: 6.5rem;
 }
 
 main .login-form-box .body .checkbox-field {
-    padding-left: 218px;
-    padding-top: 20px;
-    padding-bottom: 25px;
+    display: flex;
+    justify-content: center;
+    margin-top: 1rem;
+    padding-left: 5rem;
+}
+
+main .login-form-box .body .checkbox-field label[for="remember"] {
+    padding-left: 5px;
 }
 
 main .login-form-box .body .button-field {
-    padding-left: 218px;
-}
-
-main .login-form-box .body .button-field input {
-    width: 90px;
+    display: flex;
+    justify-content: center;
+    margin-top: 1.5rem;
 }
 
 main .login-form-box .body .links {
@@ -321,4 +318,3 @@ main .login-form-box .footer {
 main .login-form-box .footer a {
     margin-right: 5px;
 }
-

@@ -279,7 +279,7 @@ main .login-form-box .body .field .value {
 
 main .login-form-box .body .field .error {
     color: #ff0000;
-    font-size: 12px;
+    font-size: 0.75rem;
     flex-grow: 1;
     text-align: center;
     padding-left: 6.5rem;

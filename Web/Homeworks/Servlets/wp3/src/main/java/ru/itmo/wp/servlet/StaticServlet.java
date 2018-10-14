@@ -12,14 +12,12 @@ import java.nio.file.Files;
 public class StaticServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-//        String uri = request.getRequestURI();
-
         String[] uries = request.getRequestURI().split("\\+");
         OutputStream outputStream = response.getOutputStream();
         response.setContentType(getContentTypeFromName(uries[0]));
 
-        for (String uri: uries) {
-            if(!uri.startsWith("/"))
+        for (String uri : uries) {
+            if (!uri.startsWith("/"))
                 uri = "/" + uri;
 
             File file = new File(System.getProperty("user.dir") + "/src/main/webapp/static" + uri);
@@ -27,7 +25,7 @@ public class StaticServlet extends HttpServlet {
             if (file.isFile()) {
                 Files.copy(file.toPath(), outputStream);
             } else {
-                file = new File(System.getProperty("user.dir") + "/src/static" + uri);
+                file = new File(getServletContext().getRealPath("/static" + uri));
                 if (file.isFile()) {
                     Files.copy(file.toPath(), outputStream);
                 } else {
@@ -36,7 +34,6 @@ public class StaticServlet extends HttpServlet {
             }
             outputStream.flush();
         }
-
     }
 
     private String getContentTypeFromName(String name) {

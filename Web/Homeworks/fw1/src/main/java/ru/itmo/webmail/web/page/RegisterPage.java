@@ -15,12 +15,14 @@ public class RegisterPage {
         User user = new User();
         user.setLogin(request.getParameter("login"));
         String password = request.getParameter("password");
+        String confirmationPassword = request.getParameter("confirmationPassword");
 
         try {
-            userService.validateRegistration(user, password);
+            userService.validateRegistration(user, password, confirmationPassword);
         } catch (ValidationException e) {
             view.put("login", user.getLogin());
             view.put("password", password);
+            view.put("confirmationPassword", confirmationPassword);
             view.put("error", e.getMessage());
             return;
         }

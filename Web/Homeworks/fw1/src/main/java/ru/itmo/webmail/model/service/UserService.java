@@ -14,7 +14,7 @@ public class UserService {
 
     private UserRepository userRepository = new UserRepositoryImpl();
 
-    public void validateRegistration(User user, String password) throws ValidationException {
+    public void validateRegistration(User user, String password, String confirmationPassword) throws ValidationException {
         if (user.getLogin() == null || user.getLogin().isEmpty()) {
             throw new ValidationException("Login is required");
         }
@@ -37,6 +37,14 @@ public class UserService {
         if (password.length() > 32) {
             throw new ValidationException("Password can't be longer than 32");
         }
+        if (confirmationPassword == null || confirmationPassword.isEmpty()) {
+            throw new ValidationException("Confirmation password is required");
+        }
+
+        if (!password.equals(confirmationPassword)) {
+            throw new ValidationException("Passwords don't equals");
+        }
+
     }
 
     public void register(User user, String password) {

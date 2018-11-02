@@ -22,6 +22,14 @@
                     <input id="password" type="password" name="password" value="${password!}"/>
                 </div>
             </div>
+            <div class="field">
+                <div class="name">
+                    <label for="confirmationPassword">Confirmation password</label>
+                </div>
+                <div class="value">
+                    <input id="confirmationPassword" type="password" name="confirmationPassword" value="${confirmationPassword!}"/>
+                </div>
+            </div>
             <div class="button-field">
                 <input type="submit" value="Register">
             </div>

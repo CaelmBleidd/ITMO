@@ -8,6 +8,7 @@ import ru.itmo.webmail.model.repository.impl.UserRepositoryImpl;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class UserService {
     private static final String USER_PASSWORD_SALT = "dc3475f2b301851b";
@@ -18,31 +19,45 @@ public class UserService {
         if (user.getLogin() == null || user.getLogin().isEmpty()) {
             throw new ValidationException("Login is required");
         }
+
         if (!user.getLogin().matches("[a-z]+")) {
             throw new ValidationException("Login can contain only lowercase Latin letters");
         }
+
         if (user.getLogin().length() > 8) {
             throw new ValidationException("Login can't be longer than 8");
         }
+
         if (userRepository.findByLogin(user.getLogin()) != null) {
             throw new ValidationException("Login is already in use");
+        }
+
+        if (!user.getEmail().toUpperCase().matches("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$")) {
+            throw new ValidationException("Invalid email address");
+        }
+
+        if (userRepository.findByEmail(user.getEmail()) != null) {
+            throw new ValidationException("Email is already in use");
         }
 
         if (password == null || password.isEmpty()) {
             throw new ValidationException("Password is required");
         }
+
         if (password.length() < 4) {
             throw new ValidationException("Password can't be shorter than 4");
         }
+
         if (password.length() > 32) {
             throw new ValidationException("Password can't be longer than 32");
         }
+
         if (confirmationPassword == null || confirmationPassword.isEmpty()) {
             throw new ValidationException("Confirmation password is required");
         }
 
         if (!password.equals(confirmationPassword)) {
-            throw new ValidationException("Passwords don't equals");
+            throw new ValidationException("Passwords don't match");
         }
 
     }

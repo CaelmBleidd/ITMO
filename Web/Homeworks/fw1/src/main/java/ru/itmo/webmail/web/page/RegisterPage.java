@@ -2,6 +2,7 @@ package ru.itmo.webmail.web.page;
 
 import ru.itmo.webmail.model.domain.User;
 import ru.itmo.webmail.model.exception.ValidationException;
+import ru.itmo.webmail.model.repository.impl.UserRepositoryImpl;
 import ru.itmo.webmail.model.service.UserService;
 import ru.itmo.webmail.web.exception.RedirectException;
 
@@ -14,13 +15,16 @@ public class RegisterPage {
     private void register(HttpServletRequest request, Map<String, Object> view) {
         User user = new User();
         user.setLogin(request.getParameter("login"));
+        user.setEmail(request.getParameter("email"));
         String password = request.getParameter("password");
         String confirmationPassword = request.getParameter("confirmationPassword");
+        user.setId(UserRepositoryImpl.getNextId());
 
         try {
             userService.validateRegistration(user, password, confirmationPassword);
         } catch (ValidationException e) {
             view.put("login", user.getLogin());
+            view.put("email", user.getEmail());
             view.put("password", password);
             view.put("confirmationPassword", confirmationPassword);
             view.put("error", e.getMessage());

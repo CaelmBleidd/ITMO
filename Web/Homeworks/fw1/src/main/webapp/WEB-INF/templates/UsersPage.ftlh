@@ -8,7 +8,9 @@
         <thead>
         <tr>
             <th>#</th>
+            <th>ID</th>
             <th>Login</th>
+            <th>Email</th>
         </tr>
         </thead>
         <tbody>
@@ -18,7 +20,13 @@
                     ${user_index + 1}
                 </td>
                 <td>
+                    ${user.id}
+                </td>
+                <td>
                     ${user.login}
+                </td>
+                <td>
+                    ${user.email}
                 </td>
             </tr>
         </#list>

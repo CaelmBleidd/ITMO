@@ -11,6 +11,7 @@ public class UserRepositoryImpl implements UserRepository {
     private static final File tmpDir = new File(System.getProperty("java.io.tmpdir"));
 
     private List<User> users;
+    private static long last_id = 0;
 
     public UserRepositoryImpl() {
         try {
@@ -42,7 +43,16 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
+    public User findByEmail(String email) {
+        return users.stream().filter(user -> user.getEmail().equals(email)).findFirst().orElse(null);
+    }
+
+    @Override
     public List<User> findAll() {
         return new ArrayList<>(users);
+    }
+
+    public static long getNextId() {
+        return last_id++;
     }
 }

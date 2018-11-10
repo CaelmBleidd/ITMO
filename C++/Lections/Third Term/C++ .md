@@ -751,3 +751,851 @@ struct make_index_tuple <0>{
 	typedef index_tuple<Indices ...> type; 
 };
 ```
+
+
+# Lecture 5 (various problems and their solutions with different features)
+
+## [](https://github.com/IvanGusevGit/CPlusPlus-2018-/blob/master/Lecture5.md#stdcommon_type-decltypeintroduction)std::common_type, decltype(introduction).
+
+#### [](https://github.com/IvanGusevGit/CPlusPlus-2018-/blob/master/Lecture5.md#problem-1)Problem 1
+
+```
+vector<int> g(int, float)
+char g(string, int)
+
+template  <typename T>
+T* g(T, T*)
+
+template<typename ... T>
+???	f(T&& ... args) { // how to code return type?
+		return g(std::forward<T>(args)...);
+}
+
+```
+
+#### [](https://github.com/IvanGusevGit/CPlusPlus-2018-/blob/master/Lecture5.md#problem-2)Problem 2
+
+```
+template <typename U, typename V>
+??? max(U const& u, V const& v) {
+	return u < v ? v : u;
+}
+
+```
+
+#### [](https://github.com/IvanGusevGit/CPlusPlus-2018-/blob/master/Lecture5.md#solution)Solution
+
+```
+template <typename U, typename V>
+typename std::common_type<U, V>:type max(U const& u, V const& v) {
+	return u < v ? v : u;
+}
+
+```
+
+It is cool that we can code  `common_type`  on our own. In boost that problem occurred also. As a result  `result_of`  was created to deal with it.
+
+**NB:**  If you look at standard library you will notice that many staff is written with  `result_type`  which was implemented with  `typedef`.
+
+However, why should we think about return types, when compilator should know it. Let's try to ask it.
+
+```
+//It is incorrect code
+template<typename ... T>
+decltype(g(std::forward<T>(args)...) f(T&& ... args) {
+		return g(std::forward<T>(args)...);
+}
+
+```
+
+This code doesn't work because we use args before it's declaration. We have 2 ways(tricks) to cope with it.
+
+#### [](https://github.com/IvanGusevGit/CPlusPlus-2018-/blob/master/Lecture5.md#1-st-way-c11-trailing-return-type)1-st way. (C++11). Trailing return type
+
+```
+template<typename ... T>
+auto  f(T&& ... args) -> decltype(g(std::forward<T>(args)...){
+		return g(std::forward<T>(args)...);
+}
+
+```
+
+We declare function and then use syntax to get the return type. What is more, we don't have any problems with variables. It is nonstandard usage of C++11 features. Not popular.
+
+#### [](https://github.com/IvanGusevGit/CPlusPlus-2018-/blob/master/Lecture5.md#2-nd-way)2-nd way.
+
+```
+template<typename ... T>
+auto  f(T&& ... args) -> decltype(g(std::forward<T>(T())...){
+		return g(std::forward<T>(args)...);
+}
+
+```
+
+Possible problems:
+
+1.  T might not have default constructor. So we may have a substitution failure.
+2.  `args`  is  _lvalue_.  `T()`  is  _rvalue_.
+
+Inside  `sizeof()`  and  `decltype()`  we have non-evaluating values.
+
+How to get a lvalue:
+
+```
+template<typename T>
+T& declval();
+
+```
+
+So as the result we have:
+
+```
+template<typename ... T>
+auto  f(T&& ... args) -> decltype(g(std::forward<T>(declval<T>())...){
+		return g(std::forward<T>(args)...);
+}
+
+```
+
+What is written in  **cppreference**: "Transforms any type to a reference of this type. Can be used only in non-evaluating context."
+
+#### [](https://github.com/IvanGusevGit/CPlusPlus-2018-/blob/master/Lecture5.md#in-c14)In C++14.
+
+```
+template<typename ... T>
+auto  f(T&& ... args) {
+		return g(std::forward<T>(args)...);
+}
+
+```
+
+However, function signature don't take part in SFINAE any more. So we can substitute anything but the error will occur inside a function. So this code is not fully equivalent to previous one.
+
+## [](https://github.com/IvanGusevGit/CPlusPlus-2018-/blob/master/Lecture5.md#decltype)Decltype
+
+The story is amazing. We have two decltypes.
+
+1.  `decltype(var)`  - returns the type.
+    
+    ```
+     int a;
+     decltype(a);	int
+     int& b;
+     dectype(b);		int&
+    
+    ```
+    
+2.  `dectype(expr)`
+    
+    **BREAKING NEWS:**  We have not only  `lvalue`  and  `rvalue`
+    
+
+```
+graph LR
+l[lvalue]
+r[rvalue] --> pr[prvalue]
+r-->px[xvalue]
+
+```
+
+```
+T f();
+T a = f(); - f() - prvalue (pure rvalue)
+
+T&& f();
+T a = f(); - f() -xvalue;
+
+```
+
+How 2-nd decltype(expr) works:
+
+```
+//Checks expression type and returns:
+prvalue -> T
+lvalue -> T&
+xvalue -> T&&
+
+```
+
+## [](https://github.com/IvanGusevGit/CPlusPlus-2018-/blob/master/Lecture5.md#nullptr)Nullptr
+
+In C++03 we could use  `0`  as a null pointer.
+
+```
+int* p = 0; // OK
+ 
+int a = 0;
+int* p = a; //Error
+
+```
+
+`int`  can't be conversed to a pointer. But  `0`  can be considered as null pointer.
+
+This phenomena may cause some problems.
+
+```
+void f(void*);
+void f(int);
+
+f(0); //f(int)
+
+```
+
+Another problem:
+
+```
+void g(void*);
+template<typename T<
+void f(T&& arg) {
+	g(forward<T>(arg));
+}
+g(0);// works;
+f(0);// error
+f<int>(0) ok
+
+```
+
+Ok, from now on we have  `nullptr`  with a type  `nullptr_t`.
+
+```
+f(nullptr);
+f<nullptr_t>
+
+```
+
+**Simple conclusion:**  use  `nullptr`  instead of  `0`  as a pointer, because of problem described above.
+
+Theoretically we can implement  `nullptr_t`.
+
+```
+// Not full implementation.
+template<typename R, typename T>
+using mem_ptr = R T::*;
+
+struct nullptr_t {
+	template<typename T>
+	operator T*() const {
+		return 0;
+	}
+	template<typename R, typename T>
+	operator mem_ptr<R, T, A...>() const {
+		return 0;
+	}
+}
+
+typedef decltype(nullptr) nullptr_t;
+
+//What's going on?!
+A*
+A -> int(int)
+	 int(*)(int)
+
+B C::*
+B -> int(int)
+int (C::*)(int)
+
+```
+
+Modifying:
+
+```
+struct nullptr_t {
+	template<typename T>
+	operator T*() const {
+		return 0;
+	}
+	template<typename R, typename T>
+	operator R T::* () const {
+		return 0;
+	}
+}
+
+```
+
+#### [](https://github.com/IvanGusevGit/CPlusPlus-2018-/blob/master/Lecture5.md#pointers-to-members)Pointers to members.
+
+```
+struct foo {
+	int bar;
+}
+
+int foo::*p = &foo::bar;
+foo v;
+v.*p;
+foo* p;
+v->*p;
+
+```
+
+## [](https://github.com/IvanGusevGit/CPlusPlus-2018-/blob/master/Lecture5.md#c17-expanding-of-standard-library)C++17 (expanding of standard library)
+
+### [](https://github.com/IvanGusevGit/CPlusPlus-2018-/blob/master/Lecture5.md#stdoptional)std::optional
+
+Sometimes we want want to store something or nothing. Examples:
+
+1.  We want to save the date of last modification. But how can you react if there were no modifications at all.
+2.  We store the file changes but can't use them immediately. How to store it if there were no changes.
+
+**Question:**  Why should not we use exceptions?  **Answer:**  It depends. Sometimes we don't want to throw exceptions. And it is better to use them when we want to send information up.
+```
+optional<int> a;
+optional<int> a = 5;
+a = nullopt; // a is empty
+if (a) {
+	*a;
+}
+
+struct foo {
+	foo(int, int, int);
+}
+
+optional<foo> a(in_place, 1, 2, 3) // create an optional object of foo with constructor agguments (1, 2, 3)
+
+```
+
+`in_place`  is a special marker for constructor. In fact, there are other markers for other constructors.
+
+```
+a.emplace(4, 5, 6); // if optional is already created.
+
+```
+
+#### [](https://github.com/IvanGusevGit/CPlusPlus-2018-/blob/master/Lecture5.md#comparing-unique_ptr-and-optional)Comparing unique_ptr and optional
+
+1.  `unique_ptr`  stores objects in the heap while  `optional`  stores it inside itself(heap/stack). Objects may be very big, so in this case it is better to store them with  `unique_ptr`. If object is small and we want to store it as long as optional object it is better to use  `optional`.
+    
+2.  `unique_ptr`  is polymorphic. So it can store derived objects.
+    
+3.  **pimpl**  - pointer to implementation.
+    
+    // 1-st case struct foo { bar x; // must include bar }
+    
+    //2-nd case struct bar; struct foo { bar* x; //declaration is enough. }
+    
+
+In second case it is easier to add and remove members without breaking the user's code. Headers are usually compact. We can use our structure, but its implementation will be included or implemented in  **.cpp**.
+
+```
+struct foo_impl;
+struct foo {
+	...
+	...
+	...
+	unique_ptr<foo_impl> imp;
+}
+
+```
+
+Using of  `unique_ptr`  allows to have less dependencies and more flexible code.
+
+4.  `unique_ptr`  keep data in one place, while  `optional`  may copy this data many times. In addition, class implemented with  `unique_ptr`  are easily movable.
+
+Sometimes classes may have a very complicated state. At some moment, some members don't have any sense.  `optional`may make code more readable, but it is still imperfect and have disadvantages.
+
+## [](https://github.com/IvanGusevGit/CPlusPlus-2018-/blob/master/Lecture5.md#variant)Variant
+
+```
+variant<A, B, C> v; // may be of any of A, B, C types.
+
+```
+
+Imagine such situation:
+
+```
+variant<std::string, int> v = "hello"; // But we are giving char*
+
+```
+
+Variant will take a type which will be defined by overload resolution.
+
+How to work with  `variant`:
+
+```
+struct visitor {
+	void operator()(A) const;
+	void operator()(B) const;
+	...
+}
+
+visit(visitor(), v)
+
+```
+
+In case  `visit`  switches across all the types and takes the most appropriate.
+
+```
+variant<A, B> ab;
+variant<C, D> cd;
+visit(visitor(), ab, cd)
+
+```
+
+So visitor must know combinations:
+
+-   (A, C)
+-   (A, D)
+-   (B, C)
+-   (B, D)
+
+# Lecture 6 (Multi threading)
+
+Types of parallelism:
+
+-   _Instruction Level Parallelism(TLP)_  - doesn't concern programmer.
+-   _Simple Instruction Multiple Date(SIMD)_  - having multiple data in register and making one operation. We can store in long register multiple data and make one add operation with two registers. As a result in one operation we have multiple results. This method is usually used in video cards, because they have long SIMD. It is a really good boost for calculations. Theoretically, we can create such instructions. Ways of usage: writing assembler code, working with compilator features, compilator can vectorise our calculations.
+-   _Hyper-threading_
+-   _Multi core_
+
+```
+#include<thread>
+int main() {
+	std::thread t([]
+	{
+		std::cout << "hello";
+	}
+	//one of the next ways
+	->t.join(); // wait while the thread is over
+	->t.detach(); // thread works on his own. 
+}	
+
+```
+
+**BUT if main is over  `cout`  will be deleted. Never use  `detach`. It must be used in a very-very rare situations**.
+
+### [](https://github.com/IvanGusevGit/CPlusPlus-2018-/blob/master/Lecture6.md#code-example)Code example.
+
+_The next code will be pseudo code. Because in C++ it all will be undefined behavior_  Let's imagine that we are a bankers and have a lot of accounts.
+
+```
+int accounts[10000];
+void transport(size_t from, size_t to, int amount) {
+	if (accounts[from] < amount) {
+		throw runtime_error("insufficient funds");
+	}
+	accounts[from] -= amount;
+	accounts[to] += amount;
+}
+
+```
+
+This code is not usable by multi threading, because it is possible that two guys can use it, at the same time pass  `if`  and then get a negative amount of money. Because we can not guarantee how  `-=`  will work it is undefined behavior. That is why it is only pseudo code. Such error is called  **race condition**. The simplest way to make this code correct is to use  **mutex**.
+
+## [](https://github.com/IvanGusevGit/CPlusPlus-2018-/blob/master/Lecture6.md#mutex)Mutex
+
+Mutex can be read as  _Mutual ex-closure_
+
+The most important operations:
+
+-   lock() - locks mutex
+-   unlock() - waits until mutex is unlocked and then lock it;
+
+```
+int accounts[10000];
+std::mutex m;
+void transport(size_t from, size_t to, int amount) {
+	m.lock(); // waits until m is unlocked and then lock it;
+	if (accounts[from] < amount) {
+		throw runtime_error("insufficient funds"); // in case of exception we are locked forever.BAD!
+	}
+	accounts[from] -= amount;
+	accounts[to] += amount;
+	m.unlock(); // unlocks m;
+}
+
+```
+
+```
+//Incorrect. But if we consider that this code is performed correnctly in case of multi threading it is ok.
+struct mutex
+{
+	void lock() {
+		while (locked) {
+			sched_gield(); // I'm busy let other mutex work;
+			locked = true;
+		}
+	}
+	bool unlock() { locked = false;}
+	
+	bool locked;
+}
+
+```
+
+**futex**  - mutex that lulls thread until is unlocked.
+
+```
+//Now we have a correct code!
+int accounts[10000];
+std::mutex m;
+void transport(size_t from, size_t to, int amount) {
+	std::lock_guard<std::mutex> lg(m); // solves the problem with exception.
+	if (accounts[from] < amount) {
+		throw runtime_error("insufficient funds");
+	}
+	accounts[from] -= amount;
+	accounts[to] += amount;
+}
+
+```
+
+Let's create a correct  `mutex`;
+
+```
+struct mutex {
+	void lock() {
+		while (exchange(locked, true)) { // exchange is atomic
+			sched_gield(); // I'm busy let other mutex work;
+			locked = true;
+		}
+	}
+	bool unlock() { locked = false;} // atomic too
+	
+	bool locked = false;
+}
+
+```
+
+As a result we can consider that  `mutex`  is not very expensive.
+
+## [](https://github.com/IvanGusevGit/CPlusPlus-2018-/blob/master/Lecture6.md#amdal-lawawesome-formula)Amdal law.(Awesome formula)
+
+Tp - what we can do parallel Ts - what we can do sequentially Tp + Ts - amount of work N - number of threads
+
+Tp / N + Ts - boost We can consider N as infinity then the boost is just Ts.
+
+### [](https://github.com/IvanGusevGit/CPlusPlus-2018-/blob/master/Lecture6.md#lets-continue-our-task)Let's continue our task
+
+```
+//Now we have a correct code!
+int accounts[10000];
+std::mutex m[10000];
+void transport(size_t from, size_t to, int amount) {
+	if (from == to) { return ;}
+	std::lock_guard<std::mutex> lg(m[from]); // solves the problem with exception.
+	//If we have to transfers (a->b && b->a) we get bad_lock. BAD!
+	if (accounts[from] < amount) {
+		throw runtime_error("insufficient funds");
+	}
+	accounts[from] -= amount;
+	accounts[to] += amount;
+}
+
+```
+
+If we find loop than it is bad. Because a problem like in example above occurs. In our case we have a loop m1--m2--m5--m1.
+
+```
+graph LR
+m1[m1]
+m2[m2]
+m3[m3]
+m4[m4]
+m5[m5]
+m1 --> m2
+m1 --> m3
+m2 --> m3
+m2 --> m5
+m5 --> m1
+m4 --> m1
+m4 --> m2
+
+```
+
+**NB:**  The number of stacks is limited by the size of stacks. That's why it depends on your memory configurations.
+
+Nevertheless, 10000 mutexes is too many. We can create only 10, for example. As a result, we have less parallelism but less memory problems because not every but some mutexes may be quite expensive.
+
+### [](https://github.com/IvanGusevGit/CPlusPlus-2018-/blob/master/Lecture6.md#stdatomic)std::atomic
+
+```
+struct mutex {
+	void lock() {
+		while (locked.exchange(true));
+	}
+	bool unlock() { locked.store(false)}
+	
+	std::atomic<bool> locked; //std::atomic maked type atomic_
+}
+
+```
+
+-   compare_exchange - very useful tool in atomic types.
+-   Compilator can't change positions of instruction between atomic types. In addition, it is guaranteed that everything above atomic on a action moment everything is fully completed and performed.
+
+### [](https://github.com/IvanGusevGit/CPlusPlus-2018-/blob/master/Lecture6.md#new-example)New example
+
+```
+template<typename T>
+struct queue {
+	void push(T val) {
+		lock_guard<mutex> lg(m);
+		q.push_back(move(val));
+	}
+	
+	bool empty() const {
+		lock_guard<mutex> lg(m);
+		return q.empty;
+	}
+	
+	T pop() {
+		lock_guard<mutex> lg(m);
+		assert(q.empty());
+		T res = move(q.front());
+		q.pop_front();
+		return res;
+	}
+	
+mutable mutex m:
+	deque<T> q;
+}
+
+```
+
+The PROBLEM is that two guys have checked empty(). One pops, queue becomes empty, second one tries to pop empty queue and gets error. To deal with such problems we have to change our interface and create some functions like  _try_pop_or something like that.
+
+Let's discuss  **std::condition_variable**.
+
+-   _wait()_  - makes thread sleep it is waked.
+-   _notify_one()_  - wakes one of waiting threads.
+-   _notify_all()_  - wakes all waiting threads.
+
+Mutex, condition_variable are  **not fair**  as most of multi thread . No guaranteed that a thread after a limited number of skipping forward we will finally get a control.
+
+```
+template<typename T>
+struct queue {
+	void push(T val) {
+		lock_guard<mutex> lg(m);
+		q.push_back(move(val));
+		non_empty.notify_all();
+	}
+	
+	bool empty() const {
+		lock_guard<mutex> lg(m);
+		return q.empty;
+	}
+	
+	T pop() {
+		lock_guard<mutex> lg(m);
+		if (q.empty()) {
+			non_empty.wait();
+		}
+		T res = move(q.front());
+		q.pop_front();
+		return res;
+	}
+	
+	//mutex !bug! in push and pop
+
+mutable mutex m:
+	condition_variable non_empty; // Attention!
+	deque<T> q;
+}
+
+```
+
+Fixing code.
+
+```
+template<typename T>
+struct queue {
+	void push(T val) {
+		lock_guard<mutex> lg(m);
+		q.push_back(move(val));
+		non_empty.notify_all();
+	}
+	
+	bool empty() const {
+		lock_guard<mutex> lg(m);
+		return q.empty;
+	}
+	
+	T pop() {
+		m.lock();
+		while (q.empty()) {
+			m.unlock();
+			//MISTAKE!!!Let's imagine that at this monent someone locks mutex!
+			non_empty.wait();
+			m.lock();
+		}
+		T res = move(q.front());
+		q.pop_front();
+		m.unlock();
+		return res;
+	}
+
+mutable mutex m:
+	condition_variable non_empty; // Attention!
+	deque<T> q;
+}
+
+```
+
+To solve this problem we have to know how to unlock and wait in atomic way. Here  **std::unique_lock**  comes.
+
+```
+template<typename T>
+struct queue {
+	void push(T val) {
+		lock_guard<mutex> lg(m);
+		q.push_back(move(val));
+		non_empty.notify_all();
+	}
+	
+	bool empty() const {
+		lock_guard<mutex> lg(m);
+		return q.empty;
+	}
+	
+	T pop() {
+		unique_lock<mutex> lock(m);
+		while (q.empty()) {
+			non_empty.wait();
+		}
+		T res = move(q.front());
+		q.pop_front();
+		return res;
+	}
+
+mutable mutex m:
+	condition_variable non_empty; // Attention!
+	deque<T> q;
+}
+
+```
+
+However, after push we wake all, give an element for one who wants to pop and then all lulls. This problem is called  **thundering_herd**. At this moments use  `notify_one()`.
+
+```
+template<typename T>
+struct queue {
+	void push(T val) {
+		lock_guard<mutex> lg(m);
+		q.push_back(move(val));
+		non_empty.notify_one(); // Only one wakes up.
+	}
+	
+	bool empty() const {
+		lock_guard<mutex> lg(m);
+		return q.empty;
+	}
+	
+	T pop() {
+		unique_lock<mutex> lock(m);
+		while (q.empty()) {
+			non_empty.wait();
+		}
+		T res = move(q.front());
+		q.pop_front();
+		return res;
+	}
+
+mutable mutex m:
+	condition_variable non_empty;
+	deque<T> q;
+}
+```
+
+## Продолжение многопоточности 
+- Пара `promise + future`.  
+`promise` отдаётся тому, кто что-то вычисляет, кто хочет получить получает `future`. 
+Параметры `promise`:
+`set-value` -- atomically stores the  `value`  into the shared state and makes the state ready.
+`set-exception` -- atomically stores the exception pointer  `p`  into the shared state and makes the state ready.
+Параметры `future`:
+`get` -- Returns the value stored in the _shared state_ (or throws its exception) when the _shared state_ is _ready_.
+- `packaged_task`  -- обёртка над `promise + future`
+```
+T f(); 
+promise<T>; 
+void(); 
+```
+- `std::async` 
+`T f() -> future<T>`
+
+__thread-pool__ -- концепция, при которой некоторое количество потоков не завершается, а складывается. Потом, когда придёт новая задача, можно воспользоваться одним из уже имеющихся потоков. 
+
+ 
+
+> Это такой набор примитивов, просто о нём знайте. 
+> 
+`boost::thread::cancellation_point ????` -- умеет прерывать потоки
+
+__TLS (thread local storage)__ -- глобальные переменные, которые для каждого потока свои. Зачем? _Затем_. 
+
+__STM (software transactional memory)__ -- его не используют, но оно есть в теории. Мы хотим, чтобы кусок кода исполнился как будто он неделимый кусок. Т.е. либо мы видим целиком результат, либо не видим его вообще. Проблема в том, что на практике они оказываются медленными. 
+
+__HTM__ -- у процессора есть кэш. Если мы начинаем транзакцию, и в L1 (например) меняются данные, никто другой не может оттуда прочитать, пока мы их не отдадим. Когда мы закончили, мы взяли и всем отдали эти данные. Проблема: пока транзакции делаются и всё хорошо -- всё работает. Как только одна транзакция рухнет, этот поток попробует взять мьютекс. Это обрушит __все__ остальные потоки. Они тоже попробуют взять мьютекс. Проблема.
+
+Человек смог придумать довольно мало примитивов, которые удовлетворяли бы всех. 
+Следующие примитивы -- `map` и `reduce`. 
+В `map` можно легко распараллелить применение действий ко многим элементам одинаковых ( a->b, a~2~->b~2~, ...),  `reduce` для выражений вида (a * b * c * ... d * e * f, где разные потоки будут вычислять разные части произведения). 
+
+`read` -- сидим  и ждём, пока какие-то данные не придут. Синхронный подход (blocking)
+`non-blocking` -- другой подход. 
+На одном потоке можно не успеть обработать большое количество данных. Например, если мы читаем 1Гбит/c проблем особых не возникнет. При обработке 10, а тем более 40Гбит/с возникнут большие проблемы даже при попытке записи этих данных, тем более при каких-либо действиях с ними. Поэтому обычно высоконагруженные сетевые системы не делают ничего серьёзного с данными: они просто получают их и перебрасывают куда-нибудь ещё. 
+
+Не все задачи паралеллятся. Какие задачи вообще стоит пытаться распараллелить? 
+Общие ресурсы:
+- Пропускная способность памяти (__Memory bandwidth__)
+- Кэши процессора (__caches__)
+- __Hyper-threading__ -- общие __execution units__ 
+- __Power usage__ -- давно встала проблема охлаждения процессоров. Поэтому мы вынуждены ограничивать максимальную частоту процессора, чтобы не вызывать тротлинг. 
+
+Почему ещё распараллеливание может быть не очень хорошим? 
+- __sharing__
+- __false-sharing__
+```
+// sharing
+++n;
+// запускаю m потоков, каждый из которых увеличивает счётчик
+// на одном потоке на компе Вани значение дошло до 320млн 
+// на двух потоках 45-47млн (они работают на разных ядрах)
+// на двух иногда достигается 240млн, если они работают на одном ядре в разных 
+// гипертредингах  
+// на трёх потоках 46млн
+// на четырёх потоках 49млн 
+```
+```
+// false-sharing
+struct foo {
+    int x;
+    int y; 
+};
+
+static struct foo f;
+
+/* The two following functions are running concurrently: */
+
+int sum_a(void)
+{
+    int s = 0;
+    int i;
+    for (i = 0; i < 1000000; ++i)
+        s += f.x;
+    return s;
+}
+
+void inc_b(void)
+{
+    int i;
+    for (i = 0; i < 1000000; ++i)
+        ++f.y;
+}
+```
+false-sharing -- потоки работают на разных ядрах, но имеют общую кэш-линию. 
+В программах встречаются не так часто, но если встречаются, то последствия могут быть достаточно серьёзными. 
+
+Примеры программ, где можно использовать другие механизмы (кроме многопоточности):
+- __message loop__
+> Я -- поток, и я хочу ждать сотни разных событий.  Хочу ждать, пока данные придут. Хочу ждать, пока пользователь нажмёт на кнопку и тд.
+
+Один вариант -- крутиться в цикле и ждать, пока что-нибудь произойдёт. Таким образом работает подавляющее большинство UI программ.
+ `QApplication.run()` в `QT` так и делает. Достали событие -- вызвали чувака.  
+- __fiber__
+Нам сыпятся данные в формате json. Мы не хотим по какой-то причине прочитать всё и спарсить, а хотим по частям. Можно было бы завести поток, который бы немного читал, немного парсил, если данных нет -- немного висел. Мы получим все минусы потоков, о которых говорилось выше (например, что делать, если новых данных нет и не будет, а вы висите в риде).
+fiber ведут себя как потоке, но чтобы он начал работать, нужно явно указать "Хочу переключиться на тот fiber". Тогда ваш fiber заснёт, а тот начнёт работать. 
+
+> Если вы хотите использовать вычислительную мощность процессора, вы вынуждены будете использовать потоки. Если же всё, что вы хотите, это ждать -- есть другие, более пригодные для этого механизмы.
+
+ 

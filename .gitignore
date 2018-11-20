@@ -19,6 +19,8 @@ CMakeLists.txt
 *.vcxproj
 */**/.vs/*
 
+profile.properties
+
 # Compiled Object files
 *.slo
 *.lo

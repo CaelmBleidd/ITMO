@@ -53,12 +53,32 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public User findByLoginAndPasswordSha(String login, String passwordSha) {
+    public User findByEmail(String email) {
         try (Connection connection = DATA_SOURCE.getConnection()) {
             try (PreparedStatement statement = connection.prepareStatement(
-                    "SELECT * FROM User WHERE login=? AND passwordSha=?")) {
-                statement.setString(1, login);
-                statement.setString(2, passwordSha);
+                    "SELECT  * FROM User WHERE email=?")) {
+                statement.setString(1, email);
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (resultSet.next()) {
+                        return toUser(statement.getMetaData(), resultSet);
+                    } else {
+                        return null;
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            throw new RepositoryException("Can't find User by email.", e);
+        }
+    }
+
+    @Override
+    public User findByAuthenticatorAndPasswordSha(String authenticator, String passwordSha) {
+        try (Connection connection = DATA_SOURCE.getConnection()) {
+            try (PreparedStatement statement = connection.prepareStatement(
+                    "SELECT * FROM User WHERE (login=? OR email=?) AND passwordSha=?")) {
+                statement.setString(1, authenticator);
+                statement.setString(2, authenticator);
+                statement.setString(3, passwordSha);
                 try (ResultSet resultSet = statement.executeQuery()) {
                     if (resultSet.next()) {
                         return toUser(statement.getMetaData(), resultSet);
@@ -99,6 +119,8 @@ public class UserRepositoryImpl implements UserRepository {
                 user.setId(resultSet.getLong(i));
             } else if ("login".equalsIgnoreCase(columnName)) {
                 user.setLogin(resultSet.getString(i));
+            } else if ("email".equalsIgnoreCase(columnName)) {
+                user.setEmail(resultSet.getString(i));
             } else if ("passwordSha".equalsIgnoreCase(columnName)) {
                 // No operations.
             } else if ("creationTime".equalsIgnoreCase(columnName)) {
@@ -114,10 +136,11 @@ public class UserRepositoryImpl implements UserRepository {
     public void save(User user, String passwordSha) {
         try (Connection connection = DATA_SOURCE.getConnection()) {
             try (PreparedStatement statement = connection.prepareStatement(
-                    "INSERT INTO User (login, passwordSha, creationTime) VALUES (?, ?, NOW())",
+                    "INSERT INTO User (login, passwordSha, creationTime, email) VALUES (?, ?, NOW(), ?)",
                     Statement.RETURN_GENERATED_KEYS)) {
                 statement.setString(1, user.getLogin());
                 statement.setString(2, passwordSha);
+                statement.setString(3, user.getEmail());
                 if (statement.executeUpdate() == 1) {
                     ResultSet generatedIdResultSet = statement.getGeneratedKeys();
                     if (generatedIdResultSet.next()) {

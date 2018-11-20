@@ -10,19 +10,19 @@ import java.util.Map;
 
 public class EnterPage extends Page {
     private void enter(HttpServletRequest request, Map<String, Object> view) {
-        String login = request.getParameter("login");
+        String authenticator = request.getParameter("authenticator");
         String password = request.getParameter("password");
 
         try {
-            getUserService().validateEnter(login, password);
+            getUserService().validateEnter(authenticator, password);
         } catch (ValidationException e) {
-            view.put("login", login);
+            view.put("authenticator", authenticator);
             view.put("password", password);
             view.put("error", e.getMessage());
             return;
         }
 
-        User user = getUserService().authorize(login, password);
+        User user = getUserService().authorize(authenticator, password);
         request.getSession(true).setAttribute(USER_ID_SESSION_KEY, user.getId());
 
         throw new RedirectException("/index");

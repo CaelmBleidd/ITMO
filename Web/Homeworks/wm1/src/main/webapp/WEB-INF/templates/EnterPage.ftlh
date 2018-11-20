@@ -8,10 +8,10 @@
             <input type="hidden" name="action" value="enter">
             <div class="field">
                 <div class="name">
-                    <label for="login">Login</label>
+                    <label for="authenticator">Login</label>
                 </div>
                 <div class="value">
-                    <input id="login" name="login" value="${login!}"/>
+                    <input id="authenticator" name="authenticator" value="${authenticator!}"/>
                 </div>
             </div>
             <div class="field">

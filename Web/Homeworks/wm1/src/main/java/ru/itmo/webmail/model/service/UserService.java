@@ -28,7 +28,15 @@ public class UserService {
         if (userRepository.findByLogin(user.getLogin()) != null) {
             throw new ValidationException("Login is already in use");
         }
-
+        if (user.getEmail() == null || user.getEmail().isEmpty()) {
+            throw new ValidationException("Email is required");
+        }
+        if (!user.getEmail().matches(".+@.+\\..+")) {
+            throw new ValidationException("Wrong email pattern");
+        }
+        if (userRepository.findByEmail(user.getEmail()) != null) {
+            throw new ValidationException("Email in already in use");
+        }
         if (password == null || password.isEmpty()) {
             throw new ValidationException("Password is required");
         }
@@ -49,17 +57,16 @@ public class UserService {
         return userRepository.findAll();
     }
 
-    public void validateEnter(String login, String password) throws ValidationException {
-        if (login == null || login.isEmpty()) {
-            throw new ValidationException("Login is required");
+    public void validateEnter(String authenticator, String password) throws ValidationException {
+        if (authenticator == null || authenticator.isEmpty()) {
+            throw new ValidationException("Authenticator is required");
         }
-        if (!login.matches("[a-z]+")) {
-            throw new ValidationException("Login can contain only lowercase Latin letters");
+        if (!authenticator.matches("[a-z]+") && !authenticator.matches(".+@.+\\..+")) {
+            throw new ValidationException("Wrong authenticator");
         }
-        if (login.length() > 8) {
-            throw new ValidationException("Login can't be longer than 8");
+        if (authenticator.length() > 30) {
+            throw new ValidationException("Login can't be longer than 30");
         }
-
         if (password == null || password.isEmpty()) {
             throw new ValidationException("Password is required");
         }
@@ -69,9 +76,8 @@ public class UserService {
         if (password.length() > 32) {
             throw new ValidationException("Password can't be longer than 32");
         }
-
-        if (userRepository.findByLoginAndPasswordSha(login, getPasswordSha(password)) == null) {
-            throw new ValidationException("Invalid login or password");
+        if (userRepository.findByAuthenticatorAndPasswordSha(authenticator, getPasswordSha(password)) == null) {
+            throw new ValidationException("Invalid authenticator or password");
         }
     }
 
@@ -80,8 +86,8 @@ public class UserService {
                 StandardCharsets.UTF_8).toString();
     }
 
-    public User authorize(String login, String password) {
-        return userRepository.findByLoginAndPasswordSha(login, getPasswordSha(password));
+    public User authorize(String authenticator, String password) {
+        return userRepository.findByAuthenticatorAndPasswordSha(authenticator, getPasswordSha(password));
     }
 
     public User find(long userId) {

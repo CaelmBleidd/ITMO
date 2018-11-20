@@ -12,12 +12,14 @@ public class RegisterPage extends Page {
     private void register(HttpServletRequest request, Map<String, Object> view) {
         User user = new User();
         user.setLogin(request.getParameter("login"));
+        user.setEmail(request.getParameter("email"));
         String password = request.getParameter("password");
 
         try {
             getUserService().validateRegistration(user, password);
         } catch (ValidationException e) {
             view.put("login", user.getLogin());
+            view.put("email", user.getEmail());
             view.put("password", password);
             view.put("error", e.getMessage());
             return;

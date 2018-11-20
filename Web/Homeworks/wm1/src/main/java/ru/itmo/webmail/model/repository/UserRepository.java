@@ -7,7 +7,8 @@ import java.util.List;
 public interface UserRepository {
     User find(long userId);
     User findByLogin(String login);
-    User findByLoginAndPasswordSha(String login, String passwordSha);
+    User findByEmail(String email);
+    User findByAuthenticatorAndPasswordSha(String authenticator, String passwordSha);
     List<User> findAll();
     void save(User user, String passwordSha);
 }

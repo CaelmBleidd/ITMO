@@ -1634,6 +1634,57 @@ std::string strip_comment(std::string in) {
 
 ## Здесь тоже что-то пропущено (возможно даже много всего)
 
+# Uniform Initialization
+
+```
+int a[] = {1, 2, 3}
+
+struct point {
+	float x, y;
+};
+
+point p = {1, 2};
+```
+
+This mechanism is called **aggregate initialization**.
+
+```
+//It was posssible, but we want more
+vector<int> b(begin(a), end(a));
+
+
+//This appeared in C++11
+vector(initializer_list<T>);
+//So we can code
+vector<int> v = {1, 2, 3}
+```
+
+However `initializer_list<T>` is not a type. Compilator just checks if it can convert arguments to `T`.
+`void f(int);`
+
+### next problem
+
+We can't do:
+```
+f(vector<int>  1, 2, 3);
+new vector<int>{1, 2, 3}
+```
+So a new mechanism appears "**braced list**:
+```
+new vector<int>{1, 2, 3}
+int a;			//default initialization
+```
+
+Initialization syntax:
+
+- default initialization 		`int a`
+- value initialization			`f(int())`
+- copy initialization			`int a = f();`
+-  direct initialization		`mytype a(1, 2, 3);   f(mytype(1, 2, 3));`
+- list initialization			
+- copy list initialization		`mytype x = {1, 2, 3};`
+- direct list initialization		`mytype x{1, 2, 3};`
+
 ## Здесь _возможно_ будут две лекции (01.12 и 08.12)
 
 ## Продолжение пары 08.12

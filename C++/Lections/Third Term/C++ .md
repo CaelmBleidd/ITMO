@@ -1186,8 +1186,8 @@ Mutex can be read as  _Mutual ex-closure_
 
 The most important operations:
 
--   lock() - locks mutex
--   unlock() - waits until mutex is unlocked and then lock it;
+-   lock() - waits until mutex is unlocked and locks it
+-   unlock() - unlocks mutex;
 
 ```
 int accounts[10000];
@@ -1345,7 +1345,7 @@ struct queue {
 		return res;
 	}
 	
-mutable mutex m:
+	mutable mutex m; // mutable means it can be changed in const-methods
 	deque<T> q;
 }
 
@@ -1387,7 +1387,7 @@ struct queue {
 	
 	//mutex !bug! in push and pop
 
-mutable mutex m:
+	mutable mutex m;
 	condition_variable non_empty; // Attention!
 	deque<T> q;
 }
@@ -1424,7 +1424,7 @@ struct queue {
 		return res;
 	}
 
-mutable mutex m:
+	mutable mutex m;
 	condition_variable non_empty; // Attention!
 	deque<T> q;
 }

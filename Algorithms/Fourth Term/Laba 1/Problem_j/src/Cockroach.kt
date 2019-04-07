@@ -19,11 +19,11 @@ fun main() {
     val n = reader.nextInt().toInt()
     val w = reader.nextInt().toInt()
 
-    val INF = Long.MAX_VALUE / 1000L
+    val INF = Long.MAX_VALUE / 10L
 
     val was = Array(n + 2) { false }
     val distances = Array(n + 2) { INF }
-    val vertex = Array(n + 2) { Array(n + 2) { 0L } }
+    val vertex = Array(n + 2) { LongArray (n + 2) { 0L } }
 
     val x1 = LongArray(n) { 0L }
     val x2 = LongArray(n) { 0L }
